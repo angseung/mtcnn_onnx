@@ -1,24 +1,23 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-"""
-根据https://github.com/ipazc/mtcnn对FaceNet中align的重新实现
-转换模型，使用OpenCV进行推理
-不依赖Tensorlow/keras
-"""
 import os
 import imghdr
 
 import cv2
 import numpy as np
 
+
 class StageStatus(object):
     """
     Keeps status between MTCNN stages
     """
+
     def __init__(self, pad_result: tuple = None, width=0, height=0):
         self.width = width
         self.height = height
-        self.dy = self.edy = self.dx = self.edx = self.y = self.ey = self.x = self.ex = self.tmpw = self.tmph = []
+        self.dy = (
+            self.edy
+        ) = (
+            self.dx
+        ) = self.edx = self.y = self.ey = self.x = self.ex = self.tmpw = self.tmph = []
         if pad_result is not None:
             self.update(pad_result)
 
@@ -33,8 +32,13 @@ class MTCNN(object):
         a) Detection of faces (with the confidence probability)
         b) Detection of keypoints (left eye, right eye, nose, mouth_left, mouth_right)
     """
-    def __init__(self, min_face_size: int = 20, steps_threshold: list = None,
-                 scale_factor: float = 0.709):
+
+    def __init__(
+        self,
+        min_face_size: int = 20,
+        steps_threshold: list = None,
+        scale_factor: float = 0.709,
+    ):
         """
         Initializes the MTCNN.
         :param min_face_size: minimum size of the face to detect
@@ -90,7 +94,9 @@ class MTCNN(object):
         width_scaled = int(np.ceil(width * scale))
         height_scaled = int(np.ceil(height * scale))
 
-        im_data = cv2.resize(image, (width_scaled, height_scaled), interpolation=cv2.INTER_AREA)
+        im_data = cv2.resize(
+            image, (width_scaled, height_scaled), interpolation=cv2.INTER_AREA
+        )
 
         # Normalize the image's pixels
         im_data_normalized = (im_data - 127.5) * 0.0078125
@@ -99,7 +105,6 @@ class MTCNN(object):
 
     @staticmethod
     def __generate_bounding_box(imap, reg, scale, t):
-
         # use heatmap to generate bounding boxes
         stride = 2
         cellsize = 12
@@ -119,7 +124,9 @@ class MTCNN(object):
             dy2 = np.flipud(dy2)
 
         score = imap[(y, x)]
-        reg = np.transpose(np.vstack([dx1[(y, x)], dy1[(y, x)], dx2[(y, x)], dy2[(y, x)]]))
+        reg = np.transpose(
+            np.vstack([dx1[(y, x)], dy1[(y, x)], dx2[(y, x)], dy2[(y, x)]])
+        )
 
         if reg.size == 0:
             reg = np.empty(shape=(0, 3))
@@ -171,7 +178,7 @@ class MTCNN(object):
 
             inter = w * h
 
-            if method is 'Min':
+            if method is "Min":
                 o = inter / np.minimum(area[i], area[idx])
             else:
                 o = inter / (area[i] + area[idx] - inter)
@@ -276,17 +283,19 @@ class MTCNN(object):
             y = max(0, int(bounding_box[1]))
             width = int(bounding_box[2] - x)
             height = int(bounding_box[3] - y)
-            bounding_boxes.append({
-                'box': [x, y, width, height],
-                'confidence': bounding_box[-1],
-                'keypoints': {
-                    'left_eye': (int(keypoints[0]), int(keypoints[5])),
-                    'right_eye': (int(keypoints[1]), int(keypoints[6])),
-                    'nose': (int(keypoints[2]), int(keypoints[7])),
-                    'mouth_left': (int(keypoints[3]), int(keypoints[8])),
-                    'mouth_right': (int(keypoints[4]), int(keypoints[9])),
+            bounding_boxes.append(
+                {
+                    "box": [x, y, width, height],
+                    "confidence": bounding_box[-1],
+                    "keypoints": {
+                        "left_eye": (int(keypoints[0]), int(keypoints[5])),
+                        "right_eye": (int(keypoints[1]), int(keypoints[6])),
+                        "nose": (int(keypoints[2]), int(keypoints[7])),
+                        "mouth_left": (int(keypoints[3]), int(keypoints[8])),
+                        "mouth_right": (int(keypoints[4]), int(keypoints[9])),
+                    },
                 }
-            })
+            )
 
         return bounding_boxes
 
@@ -299,18 +308,20 @@ class MTCNN(object):
         image = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         results = self.detect_faces(image)
         for result in results:
-            bounding_box = result['box']
-            keypoints = result['keypoints']
-            cv2.rectangle(image,
-                          (bounding_box[0], bounding_box[1]),
-                          (bounding_box[0] + bounding_box[2], bounding_box[1] + bounding_box[3]),
-                          (0, 155, 255),
-                          2)
-            cv2.circle(image, (keypoints['left_eye']), 2, (0, 155, 255), 2)
-            cv2.circle(image, (keypoints['right_eye']), 2, (0, 155, 255), 2)
-            cv2.circle(image, (keypoints['nose']), 2, (0, 155, 255), 2)
-            cv2.circle(image, (keypoints['mouth_left']), 2, (0, 155, 255), 2)
-            cv2.circle(image, (keypoints['mouth_right']), 2, (0, 155, 255), 2)
+            bounding_box = result["box"]
+            keypoints = result["keypoints"]
+            cv2.rectangle(
+                image,
+                (bounding_box[0], bounding_box[1]),
+                (bounding_box[0] + bounding_box[2], bounding_box[1] + bounding_box[3]),
+                (0, 155, 255),
+                2,
+            )
+            cv2.circle(image, (keypoints["left_eye"]), 2, (0, 155, 255), 2)
+            cv2.circle(image, (keypoints["right_eye"]), 2, (0, 155, 255), 2)
+            cv2.circle(image, (keypoints["nose"]), 2, (0, 155, 255), 2)
+            cv2.circle(image, (keypoints["mouth_left"]), 2, (0, 155, 255), 2)
+            cv2.circle(image, (keypoints["mouth_right"]), 2, (0, 155, 255), 2)
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         is_success, im_buf_arr = cv2.imencode("." + ext, image)
         return im_buf_arr
@@ -333,16 +344,20 @@ class MTCNN(object):
             img_y = np.transpose(img_x, (0, 2, 1, 3))
 
             self._pnet.setInput(img_y)
-            out = self._pnet.forward(['conv2d_4', 'softmax'])
+            out = self._pnet.forward(["conv2d_4", "softmax"])
 
             out0 = np.transpose(out[0], (0, 2, 1, 3))
             out1 = np.transpose(out[1], (0, 2, 1, 3))
 
-            boxes, _ = self.__generate_bounding_box(out1[0, :, :, 1].copy(),
-                                                    out0[0, :, :, :].copy(), scale, self._steps_threshold[0])
+            boxes, _ = self.__generate_bounding_box(
+                out1[0, :, :, 1].copy(),
+                out0[0, :, :, :].copy(),
+                scale,
+                self._steps_threshold[0],
+            )
 
             # inter-scale nms
-            pick = self.__nms(boxes.copy(), 0.5, 'Union')
+            pick = self.__nms(boxes.copy(), 0.5, "Union")
             if boxes.size > 0 and pick.size > 0:
                 boxes = boxes[pick, :]
                 total_boxes = np.append(total_boxes, boxes, axis=0)
@@ -350,7 +365,7 @@ class MTCNN(object):
         numboxes = total_boxes.shape[0]
 
         if numboxes > 0:
-            pick = self.__nms(total_boxes.copy(), 0.7, 'Union')
+            pick = self.__nms(total_boxes.copy(), 0.7, "Union")
             total_boxes = total_boxes[pick, :]
 
             regw = total_boxes[:, 2] - total_boxes[:, 0]
@@ -361,12 +376,17 @@ class MTCNN(object):
             qq3 = total_boxes[:, 2] + total_boxes[:, 7] * regw
             qq4 = total_boxes[:, 3] + total_boxes[:, 8] * regh
 
-            total_boxes = np.transpose(np.vstack([qq1, qq2, qq3, qq4, total_boxes[:, 4]]))
+            total_boxes = np.transpose(
+                np.vstack([qq1, qq2, qq3, qq4, total_boxes[:, 4]])
+            )
             total_boxes = self.__rerec(total_boxes.copy())
 
             total_boxes[:, 0:4] = np.fix(total_boxes[:, 0:4]).astype(np.int32)
-            status = StageStatus(self.__pad(total_boxes.copy(), stage_status.width, stage_status.height),
-                                 width=stage_status.width, height=stage_status.height)
+            status = StageStatus(
+                self.__pad(total_boxes.copy(), stage_status.width, stage_status.height),
+                width=stage_status.width,
+                height=stage_status.height,
+            )
 
         return total_boxes, status
 
@@ -389,11 +409,25 @@ class MTCNN(object):
         for k in range(0, num_boxes):
             tmp = np.zeros((int(stage_status.tmph[k]), int(stage_status.tmpw[k]), 3))
 
-            tmp[stage_status.dy[k] - 1:stage_status.edy[k], stage_status.dx[k] - 1:stage_status.edx[k], :] = \
-                img[stage_status.y[k] - 1:stage_status.ey[k], stage_status.x[k] - 1:stage_status.ex[k], :]
+            tmp[
+                stage_status.dy[k] - 1 : stage_status.edy[k],
+                stage_status.dx[k] - 1 : stage_status.edx[k],
+                :,
+            ] = img[
+                stage_status.y[k] - 1 : stage_status.ey[k],
+                stage_status.x[k] - 1 : stage_status.ex[k],
+                :,
+            ]
 
-            if tmp.shape[0] > 0 and tmp.shape[1] > 0 or tmp.shape[0] == 0 and tmp.shape[1] == 0:
-                tempimg[:, :, :, k] = cv2.resize(tmp, (24, 24), interpolation=cv2.INTER_AREA)
+            if (
+                tmp.shape[0] > 0
+                and tmp.shape[1] > 0
+                or tmp.shape[0] == 0
+                and tmp.shape[1] == 0
+            ):
+                tempimg[:, :, :, k] = cv2.resize(
+                    tmp, (24, 24), interpolation=cv2.INTER_AREA
+                )
 
             else:
                 return np.empty(shape=(0,)), stage_status
@@ -402,7 +436,7 @@ class MTCNN(object):
         tempimg1 = np.transpose(tempimg, (3, 1, 0, 2))
 
         self._rnet.setInput(tempimg1)
-        out = self._rnet.forward(['dense_2', 'softmax_1'])
+        out = self._rnet.forward(["dense_2", "softmax_1"])
 
         out0 = np.transpose(out[0])
         out1 = np.transpose(out[1])
@@ -411,12 +445,14 @@ class MTCNN(object):
 
         ipass = np.where(score > self._steps_threshold[1])
 
-        total_boxes = np.hstack([total_boxes[ipass[0], 0:4].copy(), np.expand_dims(score[ipass].copy(), 1)])
+        total_boxes = np.hstack(
+            [total_boxes[ipass[0], 0:4].copy(), np.expand_dims(score[ipass].copy(), 1)]
+        )
 
         mv = out0[:, ipass[0]]
 
         if total_boxes.shape[0] > 0:
-            pick = self.__nms(total_boxes, 0.7, 'Union')
+            pick = self.__nms(total_boxes, 0.7, "Union")
             total_boxes = total_boxes[pick, :]
             total_boxes = self.__bbreg(total_boxes.copy(), np.transpose(mv[:, pick]))
             total_boxes = self.__rerec(total_boxes.copy())
@@ -437,20 +473,30 @@ class MTCNN(object):
 
         total_boxes = np.fix(total_boxes).astype(np.int32)
 
-        status = StageStatus(self.__pad(total_boxes.copy(), stage_status.width, stage_status.height),
-                             width=stage_status.width, height=stage_status.height)
+        status = StageStatus(
+            self.__pad(total_boxes.copy(), stage_status.width, stage_status.height),
+            width=stage_status.width,
+            height=stage_status.height,
+        )
 
         tempimg = np.zeros((48, 48, 3, num_boxes))
 
         for k in range(0, num_boxes):
-
             tmp = np.zeros((int(status.tmph[k]), int(status.tmpw[k]), 3))
 
-            tmp[status.dy[k] - 1:status.edy[k], status.dx[k] - 1:status.edx[k], :] = \
-                img[status.y[k] - 1:status.ey[k], status.x[k] - 1:status.ex[k], :]
+            tmp[
+                status.dy[k] - 1 : status.edy[k], status.dx[k] - 1 : status.edx[k], :
+            ] = img[status.y[k] - 1 : status.ey[k], status.x[k] - 1 : status.ex[k], :]
 
-            if tmp.shape[0] > 0 and tmp.shape[1] > 0 or tmp.shape[0] == 0 and tmp.shape[1] == 0:
-                tempimg[:, :, :, k] = cv2.resize(tmp, (48, 48), interpolation=cv2.INTER_AREA)
+            if (
+                tmp.shape[0] > 0
+                and tmp.shape[1] > 0
+                or tmp.shape[0] == 0
+                and tmp.shape[1] == 0
+            ):
+                tempimg[:, :, :, k] = cv2.resize(
+                    tmp, (48, 48), interpolation=cv2.INTER_AREA
+                )
             else:
                 return np.empty(shape=(0,)), np.empty(shape=(0,))
 
@@ -458,7 +504,7 @@ class MTCNN(object):
         tempimg1 = np.transpose(tempimg, (3, 1, 0, 2))
 
         self._onet.setInput(tempimg1)
-        out = self._onet.forward(['dense_5', 'dense_6', 'softmax_2'])
+        out = self._onet.forward(["dense_5", "dense_6", "softmax_2"])
         out0 = np.transpose(out[0])
         out1 = np.transpose(out[1])
         out2 = np.transpose(out[2])
@@ -471,19 +517,27 @@ class MTCNN(object):
 
         points = points[:, ipass[0]]
 
-        total_boxes = np.hstack([total_boxes[ipass[0], 0:4].copy(), np.expand_dims(score[ipass].copy(), 1)])
+        total_boxes = np.hstack(
+            [total_boxes[ipass[0], 0:4].copy(), np.expand_dims(score[ipass].copy(), 1)]
+        )
 
         mv = out0[:, ipass[0]]
 
         w = total_boxes[:, 2] - total_boxes[:, 0] + 1
         h = total_boxes[:, 3] - total_boxes[:, 1] + 1
 
-        points[0:5, :] = np.tile(w, (5, 1)) * points[0:5, :] + np.tile(total_boxes[:, 0], (5, 1)) - 1
-        points[5:10, :] = np.tile(h, (5, 1)) * points[5:10, :] + np.tile(total_boxes[:, 1], (5, 1)) - 1
+        points[0:5, :] = (
+            np.tile(w, (5, 1)) * points[0:5, :] + np.tile(total_boxes[:, 0], (5, 1)) - 1
+        )
+        points[5:10, :] = (
+            np.tile(h, (5, 1)) * points[5:10, :]
+            + np.tile(total_boxes[:, 1], (5, 1))
+            - 1
+        )
 
         if total_boxes.shape[0] > 0:
             total_boxes = self.__bbreg(total_boxes.copy(), np.transpose(mv))
-            pick = self.__nms(total_boxes.copy(), 0.7, 'Min')
+            pick = self.__nms(total_boxes.copy(), 0.7, "Min")
             total_boxes = total_boxes[pick, :]
             points = points[:, pick]
 
