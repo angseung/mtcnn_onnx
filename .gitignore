@@ -4,3 +4,4 @@ mtcnn_opencv.egg-info/
 venv
 .vscode
 *.jpg
+__pycache__
