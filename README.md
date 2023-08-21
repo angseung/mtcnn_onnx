@@ -37,7 +37,6 @@ if len(result) > 0:
     
     cv2.imwrite("result.jpg", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
-# 生成标记了的人脸的图片
 with open(test_pic, "rb") as fp:
     marked_data = detector.mark_faces(fp.read())
 with open("marked.jpg", "wb") as fp:
